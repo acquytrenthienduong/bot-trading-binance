@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Manipulation Demo - Protected vs Unprotected</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .demo-panel {
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid;
+        }
+
+        .protected {
+            border-color: #28a745;
+            background: #f8fff8;
+        }
+
+        .unprotected {
+            border-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .data-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e5e5e7;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .data-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .data-item:last-child {
+            border-bottom: none;
+        }
+
+        .data-item:hover {
+            background: #f8f9fa;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .item-details {
+            font-size: 14px;
+            color: #86868b;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-edit {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #0056b3;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        .btn-add {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .btn-add:hover {
+            background: #218838;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+        }
+
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ffeaa7;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #007bff;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #86868b;
+            margin-top: 5px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #86868b;
+        }
+
+        .close:hover {
+            color: #1d1d1f;
+        }
+
+        @media (max-width: 768px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Data Manipulation Demo</h1>
+            <p>So sánh giữa Protected vs Unprotected Data Access</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="demo-section">
+            <h2>📊 Thống kê dữ liệu</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalItems">0</div>
+                    <div class="stat-label">Tổng số items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="protectedItems">0</div>
+                    <div class="stat-label">Protected operations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="unprotectedItems">0</div>
+                    <div class="stat-label">Unprotected operations</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Grid -->
+        <div class="demo-grid">
+            <!-- Protected Panel -->
+            <div class="demo-panel protected">
+                <div class="panel-header">
+                    <span style="font-size: 24px;">🛡️</span>
+                    <div class="panel-title">Protected Data Access</div>
+                </div>
+                
+                <div class="success">
+                    <strong>✅ Bảo mật:</strong> Tất cả operations đều được validate và kiểm tra quyền hạn
+                </div>
+
+                <button class="btn-add" onclick="showAddModal('protected')">➕ Thêm Item Mới</button>
+
+                <div class="data-list" id="protectedList">
+                    <!-- Protected data items will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Unprotected Panel -->
+            <div class="demo-panel unprotected">
+                <div class="panel-header">
+                    <span style="font-size: 24px;">🚨</span>
+                    <div class="panel-title">Unprotected Data Access</div>
+                </div>
+                
+                <div class="warning">
+                    <strong>⚠️ Nguy hiểm:</strong> Direct access - không có validation, dễ bị tấn công
+                </div>
+
+                <button class="btn-add" onclick="showAddModal('unprotected')">➕ Thêm Item Mới</button>
+
+                <div class="data-list" id="unprotectedList">
+                    <!-- Unprotected data items will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="demo-section">
+            <h2>📝 Hướng dẫn Demo</h2>
+            <ol>
+                <li><strong>Thêm item:</strong> Click "➕ Thêm Item Mới" để thêm dữ liệu mới</li>
+                <li><strong>Sửa item:</strong> Click "✏️ Edit" để chỉnh sửa thông tin</li>
+                <li><strong>Xóa item:</strong> Click "🗑️ Delete" để xóa item</li>
+                <li><strong>So sánh:</strong> Protected panel có validation, Unprotected panel cho phép thao tác trực tiếp</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Thêm Item Mới</div>
+                <button class="close" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <form id="itemForm">
+                <div class="form-group">
+                    <label for="itemName">Tên Item:</label>
+                    <input type="text" id="itemName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemDescription">Mô tả:</label>
+                    <input type="text" id="itemDescription" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemPrice">Giá:</label>
+                    <input type="number" id="itemPrice" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemCategory">Danh mục:</label>
+                    <input type="text" id="itemCategory" required>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn" onclick="closeModal()" style="background: #6c757d; color: white;">Hủy</button>
+                    <button type="submit" class="btn" style="background: #007bff; color: white;">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // =============================================================================
+        // MOCK DATA
+        // =============================================================================
+        
+        let mockData = [
+            {
+                id: 1,
+                name: 'iPhone 15 Pro',
+                description: 'Điện thoại thông minh cao cấp',
+                price: 29990000,
+                category: 'Điện thoại',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 2,
+                name: 'MacBook Air M2',
+                description: 'Laptop siêu mỏng với chip M2',
+                price: 25990000,
+                category: 'Laptop',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 3,
+                name: 'AirPods Pro',
+                description: 'Tai nghe không dây cao cấp',
+                price: 5990000,
+                category: 'Phụ kiện',
+                createdAt: new Date().toISOString()
+            }
+        ];
+
+        let nextId = 4;
+        let currentMode = 'protected';
+        let editingItem = null;
+
+        // =============================================================================
+        // PROTECTED DATA ACCESS (SAFE)
+        // =============================================================================
+
+        class ProtectedDataManager {
+            constructor() {
+                this.operations = [];
+            }
+
+            // Validate input data
+            validateItem(item) {
+                const errors = [];
+                
+                if (!item.name || item.name.trim().length < 2) {
+                    errors.push('Tên item phải có ít nhất 2 ký tự');
+                }
+                
+                if (!item.description || item.description.trim().length < 5) {
+                    errors.push('Mô tả phải có ít nhất 5 ký tự');
+                }
+                
+                if (!item.price || item.price <= 0) {
+                    errors.push('Giá phải lớn hơn 0');
+                }
+                
+                if (!item.category || item.category.trim().length < 2) {
+                    errors.push('Danh mục phải có ít nhất 2 ký tự');
+                }
+
+                // Check for dangerous patterns
+                const dangerousPatterns = [
+                    /<script/i,
+                    /javascript:/i,
+                    /on\w+=/i,
+                    /union\s+select/i,
+                    /drop\s+table/i,
+                    /delete\s+from/i
+                ];
+
+                const allText = `${item.name} ${item.description} ${item.category}`;
+                for (const pattern of dangerousPatterns) {
+                    if (pattern.test(allText)) {
+                        errors.push('Dữ liệu chứa ký tự không hợp lệ');
+                        break;
+                    }
+                }
+
+                return {
+                    isValid: errors.length === 0,
+                    errors: errors
+                };
+            }
+
+            // Sanitize input
+            sanitizeItem(item) {
+                return {
+                    ...item,
+                    name: this.sanitizeText(item.name),
+                    description: this.sanitizeText(item.description),
+                    category: this.sanitizeText(item.category)
+                };
+            }
+
+            sanitizeText(text) {
+                return text
+                    .replace(/[<>]/g, '')
+                    .replace(/javascript:/gi, '')
+                    .replace(/on\w+=/gi, '')
+                    .trim();
+            }
+
+            // Add item with validation
+            addItem(item) {
+                const validation = this.validateItem(item);
+                
+                if (!validation.isValid) {
+                    this.showNotification(`❌ Validation failed: ${validation.errors.join(', ')}`, 'error');
+                    return false;
+                }
+
+                const sanitizedItem = this.sanitizeItem(item);
+                sanitizedItem.id = nextId++;
+                sanitizedItem.createdAt = new Date().toISOString();
+                
+                mockData.push(sanitizedItem);
+                this.operations.push({ type: 'add', item: sanitizedItem, timestamp: new Date() });
+                
+                this.showNotification('✅ Item added successfully (Protected)', 'success');
+                this.updateStats();
+                return true;
+            }
+
+            // Update item with validation
+            updateItem(id, updates) {
+                const validation = this.validateItem(updates);
+                
+                if (!validation.isValid) {
+                    this.showNotification(`❌ Validation failed: ${validation.errors.join(', ')}`, 'error');
+                    return false;
+                }
+
+                const index = mockData.findIndex(item => item.id === id);
+                if (index === -1) {
+                    this.showNotification('❌ Item not found', 'error');
+                    return false;
+                }
+
+                const sanitizedUpdates = this.sanitizeItem(updates);
+                const oldItem = { ...mockData[index] };
+                mockData[index] = { ...mockData[index], ...sanitizedUpdates };
+                
+                this.operations.push({ type: 'update', oldItem, newItem: mockData[index], timestamp: new Date() });
+                
+                this.showNotification('✅ Item updated successfully (Protected)', 'success');
+                this.updateStats();
+                return true;
+            }
+
+            // Delete item with confirmation
+            deleteItem(id) {
+                const index = mockData.findIndex(item => item.id === id);
+                if (index === -1) {
+                    this.showNotification('❌ Item not found', 'error');
+                    return false;
+                }
+
+                const deletedItem = mockData[index];
+                mockData.splice(index, 1);
+                
+                this.operations.push({ type: 'delete', item: deletedItem, timestamp: new Date() });
+                
+                this.showNotification('✅ Item deleted successfully (Protected)', 'success');
+                this.updateStats();
+                return true;
+            }
+
+            showNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 3000);
+            }
+
+            updateStats() {
+                document.getElementById('protectedItems').textContent = this.operations.length;
+            }
+        }
+
+        // =============================================================================
+        // UNPROTECTED DATA ACCESS (DANGEROUS)
+        // =============================================================================
+
+        class UnprotectedDataManager {
+            constructor() {
+                this.operations = [];
+            }
+
+            // Direct access - NO VALIDATION
+            addItem(item) {
+                // DANGEROUS: No validation, direct manipulation
+                item.id = nextId++;
+                item.createdAt = new Date().toISOString();
+                
+                mockData.push(item);
+                this.operations.push({ type: 'add', item, timestamp: new Date() });
+                
+                this.showNotification('⚠️ Item added (Unprotected - No validation!)', 'warning');
+                this.updateStats();
+                return true;
+            }
+
+            // Direct update - NO VALIDATION
+            updateItem(id, updates) {
+                const index = mockData.findIndex(item => item.id === id);
+                if (index === -1) {
+                    this.showNotification('❌ Item not found', 'error');
+                    return false;
+                }
+
+                // DANGEROUS: Direct assignment without validation
+                const oldItem = { ...mockData[index] };
+                mockData[index] = { ...mockData[index], ...updates };
+                
+                this.operations.push({ type: 'update', oldItem, newItem: mockData[index], timestamp: new Date() });
+                
+                this.showNotification('⚠️ Item updated (Unprotected - No validation!)', 'warning');
+                this.updateStats();
+                return true;
+            }
+
+            // Direct delete - NO CONFIRMATION
+            deleteItem(id) {
+                const index = mockData.findIndex(item => item.id === id);
+                if (index === -1) {
+                    this.showNotification('❌ Item not found', 'error');
+                    return false;
+                }
+
+                // DANGEROUS: Direct deletion without confirmation
+                const deletedItem = mockData[index];
+                mockData.splice(index, 1);
+                
+                this.operations.push({ type: 'delete', item: deletedItem, timestamp: new Date() });
+                
+                this.showNotification('⚠️ Item deleted (Unprotected - No confirmation!)', 'warning');
+                this.updateStats();
+                return true;
+            }
+
+            showNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 3000);
+            }
+
+            updateStats() {
+                document.getElementById('unprotectedItems').textContent = this.operations.length;
+            }
+        }
+
+        // =============================================================================
+        // UI MANAGEMENT
+        // =============================================================================
+
+        const protectedManager = new ProtectedDataManager();
+        const unprotectedManager = new UnprotectedDataManager();
+
+        function renderDataList(containerId, manager) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            mockData.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'data-item';
+                itemDiv.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-name">${escapeHtml(item.name)}</div>
+                        <div class="item-details">
+                            ${escapeHtml(item.description)} • 
+                            ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price)} • 
+                            ${escapeHtml(item.category)}
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-edit" onclick="editItem(${item.id}, '${containerId}')">✏️ Edit</button>
+                        <button class="btn btn-delete" onclick="deleteItem(${item.id}, '${containerId}')">🗑️ Delete</button>
+                    </div>
+                `;
+                container.appendChild(itemDiv);
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updateStats() {
+            document.getElementById('totalItems').textContent = mockData.length;
+        }
+
+        function showAddModal(mode) {
+            currentMode = mode;
+            editingItem = null;
+            document.getElementById('modalTitle').textContent = 'Thêm Item Mới';
+            document.getElementById('itemForm').reset();
+            document.getElementById('itemModal').style.display = 'block';
+        }
+
+        function editItem(id, containerId) {
+            const item = mockData.find(item => item.id === id);
+            if (!item) return;
+
+            currentMode = containerId === 'protectedList' ? 'protected' : 'unprotected';
+            editingItem = id;
+            
+            document.getElementById('modalTitle').textContent = 'Chỉnh sửa Item';
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemDescription').value = item.description;
+            document.getElementById('itemPrice').value = item.price;
+            document.getElementById('itemCategory').value = item.category;
+            
+            document.getElementById('itemModal').style.display = 'block';
+        }
+
+        function deleteItem(id, containerId) {
+            const mode = containerId === 'protectedList' ? 'protected' : 'unprotected';
+            const manager = mode === 'protected' ? protectedManager : unprotectedManager;
+            
+            if (mode === 'protected') {
+                // Protected: Show confirmation
+                if (confirm('Bạn có chắc chắn muốn xóa item này?')) {
+                    if (manager.deleteItem(id)) {
+                        renderDataList('protectedList', protectedManager);
+                        renderDataList('unprotectedList', unprotectedManager);
+                        updateStats();
+                    }
+                }
+            } else {
+                // Unprotected: Direct deletion
+                if (manager.deleteItem(id)) {
+                    renderDataList('protectedList', protectedManager);
+                    renderDataList('unprotectedList', unprotectedManager);
+                    updateStats();
+                }
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('itemModal').style.display = 'none';
+            editingItem = null;
+        }
+
+        // Form submission
+        document.getElementById('itemForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('itemName').value,
+                description: document.getElementById('itemDescription').value,
+                price: parseFloat(document.getElementById('itemPrice').value),
+                category: document.getElementById('itemCategory').value
+            };
+
+            const manager = currentMode === 'protected' ? protectedManager : unprotectedManager;
+            const containerId = currentMode === 'protected' ? 'protectedList' : 'unprotectedList';
+            
+            let success = false;
+            
+            if (editingItem) {
+                success = manager.updateItem(editingItem, formData);
+            } else {
+                success = manager.addItem(formData);
+            }
+
+            if (success) {
+                renderDataList('protectedList', protectedManager);
+                renderDataList('unprotectedList', unprotectedManager);
+                updateStats();
+                closeModal();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderDataList('protectedList', protectedManager);
+            renderDataList('unprotectedList', unprotectedManager);
+            updateStats();
+            
+            console.log('🚀 Data Manipulation Demo initialized');
+            console.log('🛡️ Protected: Validation, sanitization, confirmation');
+            console.log('🚨 Unprotected: Direct access, no validation');
+        });
+    </script>
+</body>
+</html>
+
+

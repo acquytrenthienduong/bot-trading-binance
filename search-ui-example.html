@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search UI Example - Best Practices Demo</title>
+    <style>
+        /* Reset và base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #86868b;
+            font-size: 1.1rem;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            border: 2px solid #e5e5e7;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #007aff;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        }
+
+        .search-input.error {
+            border-color: #ff3b30;
+            background: #fff5f5;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #86868b;
+            font-size: 18px;
+        }
+
+        .search-loading {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e5e5e7;
+            border-top: 2px solid #007aff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #ff3b30;
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        /* Main Content Layout */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            min-height: 600px;
+        }
+
+        /* Results Panel */
+        .results-panel {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .results-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #e5e5e7;
+            background: #fafafa;
+        }
+
+        .results-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .results-count {
+            color: #86868b;
+            font-size: 14px;
+        }
+
+        .results-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .result-item {
+            padding: 20px 30px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .result-item:hover {
+            background: #f8f9fa;
+        }
+
+        .result-item.selected {
+            background: #e3f2fd;
+            border-left: 4px solid #007aff;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+        }
+
+        .result-description {
+            color: #86868b;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .result-meta {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #86868b;
+        }
+
+        .no-results {
+            padding: 60px 30px;
+            text-align: center;
+            color: #86868b;
+        }
+
+        .no-results-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Detail Panel */
+        .detail-panel {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .detail-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #e5e5e7;
+            background: #fafafa;
+        }
+
+        .detail-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .detail-content {
+            padding: 30px;
+        }
+
+        .detail-placeholder {
+            text-align: center;
+            color: #86868b;
+            padding: 60px 30px;
+        }
+
+        .detail-placeholder-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .detail-item {
+            margin-bottom: 20px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            color: #86868b;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .search-section {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Loading states */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Success/Error states */
+        .success {
+            border-color: #34c759 !important;
+        }
+
+        .error {
+            border-color: #ff3b30 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Search UI Example</h1>
+            <p>Demo các best practices trong code review: Validation, Security, Performance</p>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-container">
+                <div class="search-icon">🔍</div>
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="search-input" 
+                    placeholder="Tìm kiếm sản phẩm, người dùng, hoặc nội dung..."
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+                <div class="search-loading" id="searchLoading">
+                    <div class="spinner"></div>
+                </div>
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+        </div>
+
+        <!-- XSS Demo Section -->
+        <div class="search-section">
+            <h3 style="text-align: center; margin-bottom: 20px; color: #1d1d1f;">🚨 XSS & SQL Injection Demo</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Safe Input -->
+                <div style="border: 2px solid #28a745; border-radius: 8px; padding: 15px; background: #f8fff8;">
+                    <h4 style="color: #28a745; margin-bottom: 10px;">✅ SAFE Input (Có bảo mật)</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Input được validate và sanitize</p>
+                    <input 
+                        type="text" 
+                        id="safeInput" 
+                        class="search-input" 
+                        placeholder="Thử paste XSS payload: &lt;script&gt;alert('XSS')&lt;/script&gt;"
+                        style="margin-bottom: 10px;"
+                    >
+                    <button onclick="renderSafe()" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; width: 100%;">
+                        🛡️ Render SAFE
+                    </button>
+                    <div id="safeResult" style="margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9; min-height: 50px; font-size: 14px;">
+                        <em>Kết quả sẽ hiển thị ở đây...</em>
+                    </div>
+                </div>
+
+                <!-- Unsafe Input -->
+                <div style="border: 2px solid #dc3545; border-radius: 8px; padding: 15px; background: #fff5f5;">
+                    <h4 style="color: #dc3545; margin-bottom: 10px;">❌ UNSAFE Input (Không bảo mật)</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Input render trực tiếp - NGUY HIỂM!</p>
+                    <input 
+                        type="text" 
+                        id="unsafeInput" 
+                        class="search-input" 
+                        placeholder="Thử paste XSS payload: &lt;script&gt;alert('XSS')&lt;/script&gt;"
+                        style="margin-bottom: 10px;"
+                    >
+                    <button onclick="renderUnsafe()" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; width: 100%;">
+                        🚨 Render UNSAFE
+                    </button>
+                    <div id="unsafeResult" style="margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9; min-height: 50px; font-size: 14px;">
+                        <em>Kết quả sẽ hiển thị ở đây...</em>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Test Buttons -->
+            <div style="margin-top: 20px; text-align: center;">
+                <h4>🎯 Quick Test Payloads:</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px;">
+                    <button onclick="fillPayload('<script>alert(\'XSS Attack!\')</script>')" style="background: #6c757d; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                        Copy: &lt;script&gt;alert('XSS')&lt;/script&gt;
+                    </button>
+                    <button onclick="fillPayload('hackDeleteAllData()')" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                        🚨 Hack: Delete All Data
+                    </button>
+                    <button onclick="fillPayload('hackModifyData()')" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                        🚨 Hack: Modify All Data
+                    </button>
+                    <button onclick="fillPayload('hackAddFakeData()')" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                        🚨 Hack: Add Fake Data
+                    </button>
+                    <button onclick="fillPayload('mockData = []')" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                        💥 Direct: mockData = []
+                    </button>
+                    <button onclick="fillPayload('mockData = [{id: 1, title: \'HACKED\', price: \'0\'}]')" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                        💥 Direct: Replace All Data
+                    </button>
+                    <button onclick="fillPayload('UNION SELECT * FROM users')" style="background: #6c757d; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                        Copy: UNION SELECT
+                    </button>
+                </div>
+                <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
+                    <strong>⚠️ Lưu ý:</strong> Các button màu đỏ sẽ hack dữ liệu thực tế! Chỉ test với ô UNSAFE.
+                </div>
+            </div>token
+        </div>
+
+        <!-- Mock Data Display -->
+        <div class="search-section">
+            <h3 style="text-align: center; margin-bottom: 20px; color: #1d1d1f;">📊 Mock Data Status</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <span><strong>Total Items:</strong> <span id="dataCount">5</span></span>
+                <button onclick="refreshDataDisplay()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                    🔄 Refresh Data
+                </button>
+            </div>
+            <div id="mockDataDisplay" style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e5e7; border-radius: 8px; padding: 15px; background: #f9f9f9; font-family: monospace; font-size: 12px;">
+                <!-- Mock data will be displayed here -->
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Results Panel -->
+            <div class="results-panel">
+                <div class="results-header">
+                    <h2>Kết quả tìm kiếm</h2>
+                    <div class="results-count" id="resultsCount">Chưa có kết quả</div>
+                </div>
+                <div class="results-list" id="resultsList">
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <p>Nhập từ khóa để bắt đầu tìm kiếm</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detail Panel -->
+            <div class="detail-panel">
+                <div class="detail-header">
+                    <h2>Chi tiết</h2>
+                </div>
+                <div class="detail-content" id="detailContent">
+                    <div class="detail-placeholder">
+                        <div class="detail-placeholder-icon">📋</div>
+                        <p>Chọn một mục từ danh sách để xem chi tiết</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============================================================================
+        // SECURITY & VALIDATION UTILITIES
+        // =============================================================================
+
+        /**
+         * Sanitize input để chống XSS attacks
+         * @param {string} input - Input cần sanitize
+         * @returns {string} - Input đã được sanitize
+         */
+        function sanitizeInput(input) {
+            if (typeof input !== 'string') return '';
+            
+            return input
+                .replace(/[<>]/g, '') // Loại bỏ < và >
+                .replace(/javascript:/gi, '') // Loại bỏ javascript:
+                .replace(/on\w+=/gi, '') // Loại bỏ event handlers
+                .trim();
+        }
+
+        /**
+         * Validate search input
+         * @param {string} query - Search query
+         * @returns {Object} - Validation result
+         */
+        function validateSearchQuery(query) {
+            const errors = [];
+            
+            // Kiểm tra độ dài
+            if (query.length < 2) {
+                errors.push('Từ khóa tìm kiếm phải có ít nhất 2 ký tự');
+            }
+            
+            if (query.length > 100) {
+                errors.push('Từ khóa tìm kiếm không được vượt quá 100 ký tự');
+            }
+            
+            // Kiểm tra ký tự đặc biệt nguy hiểm
+            const dangerousPatterns = [
+                /<script/i,
+                /javascript:/i,
+                /on\w+\s*=/i,
+                /union\s+select/i,
+                /drop\s+table/i,
+                /delete\s+from/i,
+                /insert\s+into/i,
+                /update\s+set/i
+            ];
+            
+            for (const pattern of dangerousPatterns) {
+                if (pattern.test(query)) {
+                    errors.push('Từ khóa chứa ký tự không hợp lệ');
+                    break;
+                }
+            }
+            
+            return {
+                isValid: errors.length === 0,
+                errors: errors
+            };
+        }
+
+        /**
+         * Escape HTML để chống XSS
+         * @param {string} text - Text cần escape
+         * @returns {string} - Text đã escape
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // =============================================================================
+        // PERFORMANCE UTILITIES
+        // =============================================================================
+
+        /**
+         * Debounce function để tối ưu performance
+         * @param {Function} func - Function cần debounce
+         * @param {number} wait - Thời gian chờ (ms)
+         * @returns {Function} - Debounced function
+         */
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        /**
+         * Throttle function để giới hạn tần suất gọi
+         * @param {Function} func - Function cần throttle
+         * @param {number} limit - Thời gian giới hạn (ms)
+         * @returns {Function} - Throttled function
+         */
+        function throttle(func, limit) {
+            let inThrottle;
+            return function(...args) {
+                if (!inThrottle) {
+                    func.apply(this, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
+        // =============================================================================
+        // DATA MANAGEMENT
+        // =============================================================================
+
+        /**
+         * Mock data - trong thực tế sẽ fetch từ API
+         */
+        let mockData = [
+            {
+                id: 1,
+                title: 'iPhone 15 Pro Max',
+                description: 'Điện thoại thông minh cao cấp với camera 48MP và chip A17 Pro',
+                category: 'Điện thoại',
+                price: '29990000',
+                stock: 15,
+                rating: 4.8,
+                createdAt: '2024-01-15'
+            },
+            {
+                id: 2,
+                title: 'MacBook Air M2',
+                description: 'Laptop siêu mỏng với chip M2, hiệu năng mạnh mẽ và pin lâu',
+                category: 'Laptop',
+                price: '25990000',
+                stock: 8,
+                rating: 4.9,
+                createdAt: '2024-01-10'
+            },
+            {
+                id: 3,
+                title: 'AirPods Pro 2',
+                description: 'Tai nghe không dây với chống ồn chủ động và chất lượng âm thanh cao',
+                category: 'Phụ kiện',
+                price: '5990000',
+                stock: 25,
+                rating: 4.7,
+                createdAt: '2024-01-20'
+            },
+            {
+                id: 4,
+                title: 'iPad Pro 12.9"',
+                description: 'Máy tính bảng chuyên nghiệp với màn hình Liquid Retina XDR',
+                category: 'Máy tính bảng',
+                price: '21990000',
+                stock: 12,
+                rating: 4.8,
+                createdAt: '2024-01-12'
+            },
+            {
+                id: 5,
+                title: 'Apple Watch Series 9',
+                description: 'Đồng hồ thông minh với tính năng sức khỏe và thể thao tiên tiến',
+                category: 'Đồng hồ',
+                price: '8990000',
+                stock: 20,
+                rating: 4.6,
+                createdAt: '2024-01-18'
+            }
+        ];
+
+        // Global functions that can be accessed by injected code (DANGEROUS!)
+        window.hackDeleteAllData = function() {
+            mockData = [];
+            alert('🚨 HACK SUCCESSFUL: All data deleted!');
+            console.log('All mock data deleted by hack');
+            return 'All data deleted';
+        };
+
+        window.hackModifyData = function() {
+            mockData.forEach(item => {
+                item.title = 'HACKED: ' + item.title;
+                item.price = '0';
+            });
+            alert('🚨 HACK SUCCESSFUL: All data modified!');
+            console.log('All mock data modified by hack');
+            return 'All data modified';
+        };
+
+        window.hackAddFakeData = function() {
+            mockData.push({
+                id: 999,
+                title: 'HACKED ITEM',
+                description: 'This item was added by malicious code',
+                category: 'HACK',
+                price: '999999999',
+                stock: 0,
+                rating: 0,
+                createdAt: new Date().toISOString()
+            });
+            alert('🚨 HACK SUCCESSFUL: Fake data added!');
+            console.log('Fake data added by hack');
+            return 'Fake data added';
+        };
+
+        /**
+         * Simulate API search với delay
+         * @param {string} query - Search query
+         * @returns {Promise<Array>} - Search results
+         */
+        async function searchProducts(query) {
+            // Simulate network delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (!query || query.length < 2) {
+                return [];
+            }
+            
+            const sanitizedQuery = sanitizeInput(query).toLowerCase();
+            
+            return mockData.filter(item => 
+                item.title.toLowerCase().includes(sanitizedQuery) ||
+                item.description.toLowerCase().includes(sanitizedQuery) ||
+                item.category.toLowerCase().includes(sanitizedQuery)
+            );
+        }
+
+        // =============================================================================
+        // UI STATE MANAGEMENT
+        // =============================================================================
+
+        class SearchUI {
+            constructor() {
+                this.currentQuery = '';
+                this.currentResults = [];
+                this.selectedItem = null;
+                this.isLoading = false;
+                
+                this.initializeElements();
+                this.attachEventListeners();
+            }
+
+            initializeElements() {
+                this.searchInput = document.getElementById('searchInput');
+                this.searchLoading = document.getElementById('searchLoading');
+                this.errorMessage = document.getElementById('errorMessage');
+                this.resultsList = document.getElementById('resultsList');
+                this.resultsCount = document.getElementById('resultsCount');
+                this.detailContent = document.getElementById('detailContent');
+            }
+
+            attachEventListeners() {
+                // Debounced search để tối ưu performance
+                const debouncedSearch = debounce((query) => {
+                    this.performSearch(query);
+                }, 300);
+
+                this.searchInput.addEventListener('input', (event) => {
+                    const query = event.target.value;
+                    this.handleSearchInput(query, debouncedSearch);
+                });
+
+                // Throttled scroll để tối ưu performance khi scroll
+                const throttledScroll = throttle(() => {
+                    this.handleScroll();
+                }, 100);
+
+                this.resultsList.addEventListener('scroll', throttledScroll);
+            }
+
+            handleSearchInput(query, debouncedSearch) {
+                // Clear previous errors
+                this.clearError();
+                
+                // Validate input
+                const validation = validateSearchQuery(query);
+                
+                if (!validation.isValid) {
+                    this.showError(validation.errors[0]);
+                    this.clearResults();
+                    return;
+                }
+
+                // Sanitize input
+                const sanitizedQuery = sanitizeInput(query);
+                
+                // Update UI state
+                this.currentQuery = sanitizedQuery;
+                
+                if (sanitizedQuery.length >= 2) {
+                    debouncedSearch(sanitizedQuery);
+                } else {
+                    this.clearResults();
+                }
+            }
+
+            async performSearch(query) {
+                if (this.isLoading) return;
+                
+                this.setLoading(true);
+                
+                try {
+                    const results = await searchProducts(query);
+                    this.displayResults(results);
+                } catch (error) {
+                    console.error('Search error:', error);
+                    this.showError('Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.');
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+
+            setLoading(isLoading) {
+                this.isLoading = isLoading;
+                
+                if (isLoading) {
+                    this.searchLoading.style.display = 'block';
+                    this.searchInput.classList.add('loading');
+                } else {
+                    this.searchLoading.style.display = 'none';
+                    this.searchInput.classList.remove('loading');
+                }
+            }
+
+            displayResults(results) {
+                this.currentResults = results;
+                
+                if (results.length === 0) {
+                    this.showNoResults();
+                    return;
+                }
+
+                this.resultsCount.textContent = `${results.length} kết quả tìm được`;
+                
+                const resultsHtml = results.map((item, index) => `
+                    <div class="result-item" data-id="${item.id}" data-index="${index}">
+                        <div class="result-title">${escapeHtml(item.title)}</div>
+                        <div class="result-description">${escapeHtml(item.description)}</div>
+                        <div class="result-meta">
+                            ${escapeHtml(item.category)} • 
+                            ${new Intl.NumberFormat('vi-VN', { 
+                                style: 'currency', 
+                                currency: 'VND' 
+                            }).format(item.price)} • 
+                            ⭐ ${item.rating}
+                        </div>
+                    </div>
+                `).join('');
+
+                this.resultsList.innerHTML = resultsHtml;
+                
+                // Attach click handlers
+                this.attachResultClickHandlers();
+            }
+
+            attachResultClickHandlers() {
+                const resultItems = this.resultsList.querySelectorAll('.result-item');
+                
+                resultItems.forEach(item => {
+                    item.addEventListener('click', () => {
+                        const itemId = parseInt(item.dataset.id);
+                        const itemIndex = parseInt(item.dataset.index);
+                        this.selectItem(itemId, itemIndex);
+                    });
+                });
+            }
+
+            selectItem(itemId, itemIndex) {
+                // Update selected state
+                this.resultsList.querySelectorAll('.result-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                
+                const selectedElement = this.resultsList.querySelector(`[data-id="${itemId}"]`);
+                if (selectedElement) {
+                    selectedElement.classList.add('selected');
+                }
+
+                // Show detail
+                const selectedItem = this.currentResults[itemIndex];
+                this.showDetail(selectedItem);
+            }
+
+            showDetail(item) {
+                this.selectedItem = item;
+                
+                const detailHtml = `
+                    <div class="detail-item">
+                        <div class="detail-label">Tên sản phẩm</div>
+                        <div class="detail-value">${escapeHtml(item.title)}</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Mô tả</div>
+                        <div class="detail-value">${escapeHtml(item.description)}</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Danh mục</div>
+                        <div class="detail-value">${escapeHtml(item.category)}</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Giá</div>
+                        <div class="detail-value">${new Intl.NumberFormat('vi-VN', { 
+                            style: 'currency', 
+                            currency: 'VND' 
+                        }).format(item.price)}</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Tồn kho</div>
+                        <div class="detail-value">${item.stock} sản phẩm</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Đánh giá</div>
+                        <div class="detail-value">⭐ ${item.rating}/5.0</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Ngày tạo</div>
+                        <div class="detail-value">${new Date(item.createdAt).toLocaleDateString('vi-VN')}</div>
+                    </div>
+                `;
+                
+                this.detailContent.innerHTML = detailHtml;
+            }
+
+            showNoResults() {
+                this.resultsCount.textContent = 'Không tìm thấy kết quả';
+                this.resultsList.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">😔</div>
+                        <p>Không tìm thấy kết quả nào cho "${escapeHtml(this.currentQuery)}"</p>
+                        <p style="margin-top: 8px; font-size: 14px;">Thử với từ khóa khác hoặc kiểm tra chính tả</p>
+                    </div>
+                `;
+            }
+
+            clearResults() {
+                this.currentResults = [];
+                this.selectedItem = null;
+                this.resultsCount.textContent = 'Chưa có kết quả';
+                this.resultsList.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <p>Nhập từ khóa để bắt đầu tìm kiếm</p>
+                    </div>
+                `;
+                this.detailContent.innerHTML = `
+                    <div class="detail-placeholder">
+                        <div class="detail-placeholder-icon">📋</div>
+                        <p>Chọn một mục từ danh sách để xem chi tiết</p>
+                    </div>
+                `;
+            }
+
+            showError(message) {
+                this.errorMessage.textContent = message;
+                this.errorMessage.style.display = 'block';
+                this.searchInput.classList.add('error');
+            }
+
+            clearError() {
+                this.errorMessage.style.display = 'none';
+                this.searchInput.classList.remove('error');
+            }
+
+            handleScroll() {
+                // Có thể implement infinite scroll ở đây
+                console.log('Scroll event handled');
+            }
+        }
+
+        // =============================================================================
+        // INITIALIZATION
+        // =============================================================================
+
+        // Khởi tạo ứng dụng khi DOM đã load
+        document.addEventListener('DOMContentLoaded', () => {
+            new SearchUI();
+            
+            // Log để demo
+            console.log('🚀 Search UI initialized with best practices:');
+            console.log('✅ Input validation & sanitization');
+            console.log('✅ XSS protection');
+            console.log('✅ SQL injection prevention');
+            console.log('✅ Debounced search');
+            console.log('✅ Throttled scroll');
+            console.log('✅ Error handling');
+            console.log('✅ Responsive design');
+            console.log('✅ Accessibility considerations');
+        });
+
+        // =============================================================================
+        // XSS DEMO FUNCTIONS
+        // =============================================================================
+
+        /**
+         * Fill payload vào cả 2 input để test
+         * @param {string} payload - XSS/SQL injection payload
+         */
+        function fillPayload(payload) {
+            document.getElementById('safeInput').value = payload;
+            document.getElementById('unsafeInput').value = payload;
+            
+            // Show notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed; top: 20px; right: 20px; 
+                background: #007bff; color: white; 
+                padding: 10px 20px; border-radius: 4px; 
+                z-index: 1000; font-size: 14px;
+            `;
+            notification.textContent = `✅ Đã copy payload: ${payload}`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 3000);
+        }
+
+        /**
+         * Render UNSAFE - VULNERABLE to XSS and Code Injection
+         */
+        function renderUnsafe() {
+            const input = document.getElementById('unsafeInput').value;
+            const resultDiv = document.getElementById('unsafeResult');
+            
+            // DANGEROUS: Direct innerHTML without sanitization - allows code execution
+            resultDiv.innerHTML = input;
+            
+            // DANGEROUS: Also allow direct JavaScript execution
+            try {
+                // This is EXTREMELY DANGEROUS - allows arbitrary code execution
+                // Check if input contains dangerous operations
+                if (input.includes('mockData') || 
+                    input.includes('hackDeleteAllData()') || 
+                    input.includes('hackModifyData()') || 
+                    input.includes('hackAddFakeData()') ||
+                    input.includes('=') ||
+                    input.includes('eval(') ||
+                    input.includes('Function(')) {
+                    
+                    // Execute the malicious code
+                    eval(input);
+                    
+                    // Refresh data display to show the hack result
+                    setTimeout(() => {
+                        refreshDataDisplay();
+                    }, 100);
+                    
+                    // Show specific warning based on what was executed
+                    if (input.includes('mockData = []') || input.includes('mockData=')) {
+                        showNotification('🚨 UNSAFE: Direct data manipulation successful!', 'danger');
+                    } else {
+                        showNotification('🚨 UNSAFE: Code injection successful!', 'danger');
+                    }
+                }
+            } catch (e) {
+                console.log('Code execution failed:', e);
+                showNotification('❌ Code execution failed: ' + e.message, 'error');
+            }
+            
+            // Log for debugging
+            console.log('🚨 UNSAFE render:', input);
+        }
+
+        /**
+         * Render SAFE - PROTECTED against XSS
+         */
+        function renderSafe() {
+            const rawInput = document.getElementById('safeInput').value;
+            const sanitizedInput = sanitizeInput(rawInput);
+            const resultDiv = document.getElementById('safeResult');
+            
+            // SAFE: Using textContent and sanitization
+            resultDiv.textContent = sanitizedInput;
+            
+            // Log for debugging
+            console.log('🛡️ SAFE render:', rawInput, '→', sanitizedInput);
+            
+            // Show success
+            showNotification('🛡️ SAFE: XSS attack blocked!', 'success');
+        }
+
+        /**
+         * Show notification
+         * @param {string} message - Notification message
+         * @param {string} type - Notification type (success/danger)
+         */
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? '#28a745' : '#dc3545';
+            
+            notification.style.cssText = `
+                position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                background: ${bgColor}; color: white; 
+                padding: 15px 30px; border-radius: 8px; 
+                z-index: 1000; font-size: 16px; font-weight: bold;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 4000);
+        }
+
+        /**
+         * Refresh and display mock data
+         */
+        function refreshDataDisplay() {
+            const dataCount = document.getElementById('dataCount');
+            const dataDisplay = document.getElementById('mockDataDisplay');
+            
+            dataCount.textContent = mockData.length;
+            
+            if (mockData.length === 0) {
+                dataDisplay.innerHTML = '<div style="color: #dc3545; font-weight: bold;">🚨 NO DATA - All data has been deleted by hack!</div>';
+            } else {
+                dataDisplay.innerHTML = mockData.map(item => 
+                    `<div style="margin-bottom: 8px; padding: 5px; background: white; border-radius: 4px;">
+                        <strong>ID ${item.id}:</strong> ${item.title} | Price: ${item.price} | Category: ${item.category}
+                    </div>`
+                ).join('');
+            }
+        }
+
+        // Auto-sync inputs for easy testing
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sync inputs
+            document.getElementById('safeInput').addEventListener('input', function() {
+                document.getElementById('unsafeInput').value = this.value;
+            });
+
+            document.getElementById('unsafeInput').addEventListener('input', function() {
+                document.getElementById('safeInput').value = this.value;
+            });
+
+            // Initialize data display
+            refreshDataDisplay();
+        });
+
+        // =============================================================================
+        // SECURITY: Prevent common attacks
+        // =============================================================================
+
+        // // Disable right-click context menu (optional security measure)
+        // document.addEventListener('contextmenu', (e) => {
+        //     e.preventDefault();
+        // });
+
+        // // Disable F12, Ctrl+Shift+I, etc. (optional security measure)
+        // document.addEventListener('keydown', (e) => {
+        //     if (e.key === 'F12' || 
+        //         (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+        //         (e.ctrlKey && e.shiftKey && e.key === 'C') ||
+        //         (e.ctrlKey && e.key === 'U')) {
+        //         e.preventDefault();
+        //     }
+        // });
+    </script>
+</body>
+</html>

@@ -1,60 +1,127 @@
+// BRSE Training: Refactored to demonstrate common review fixes (Security, Stability, Logic)
 const ccxt = require("ccxt");
 const moment = require("moment");
 const delay = require("delay");
+
+// Security & Compliance: remove hardcoded credentials, use environment variables instead
+// Set BINANCE_API_KEY and BINANCE_SECRET in your environment for real trading; sandbox doesn't require them
 const binance = new ccxt.binance({
-  apiKey: "AYjWFKDxBjYpfDekZrdFzxoxx6QvVHtus2zxUPWJJeoakHu9XEbJziNNSUvDVAm5",
-  secret: "Z50fHwrYpKWYtldfTuHKMKj1t9NbzhWqdo7XlGSw2FymXyXepdqcvVa9R2WFwWpq",
+  apiKey: process.env.BINANCE_API_KEY,
+  secret: process.env.BINANCE_SECRET,
 });
 binance.setSandboxMode(true);
 
-async function printBalance(btcPrice) {
-  const balance = await binance.fetchBalance();
-  const total = balance.total;
+// Logic & Algorithm: centralize configuration to avoid magic numbers
+const CONFIG = {
+  SYMBOL: "BTC/USDT",
+  INTERVAL: "1m",
+  CANDLE_LIMIT: 5,
+  TRADE_SIZE_USD: 100,
+  LOOP_DELAY_MS: 60 * 1000,
+};
 
-  console.log(`Balance: BTC: ${total.BTC}, USDT: ${total.USDT}`);
-  console.log(`Total USD: ${(total.BTC - 1) * btcPrice + total.USDT}. \n`);
+// Coding Style: consistent, structured logging
+function logInfo(message, extra = {}) {
+  // Keep console output simple for this training, but structured
+  console.log(`${moment().format()} | INFO | ${message}`, extra);
+}
+function logError(message, extra = {}) {
+  console.error(`${moment().format()} | ERROR | ${message}`, extra);
+}
+
+// Stability: null-checks and guarded computations
+async function printBalance(lastBtcPrice) {
+  try {
+    const balance = await binance.fetchBalance();
+    const total = balance && balance.total ? balance.total : {};
+    const btc = typeof total.BTC === "number" ? total.BTC : 0;
+    const usdt = typeof total.USDT === "number" ? total.USDT : 0;
+    const price = typeof lastBtcPrice === "number" ? lastBtcPrice : 0;
+    const totalUsd = btc * price + usdt; // fix: remove incorrect "- 1" from original
+    logInfo(`Balance: BTC=${btc}, USDT=${usdt}. TotalUSD≈${totalUsd.toFixed(2)}`);
+  } catch (error) {
+    logError("Failed to fetch/print balance", { message: error.message });
+  }
+}
+
+// Fetch latest candles and compute average/last prices
+async function getMarketSnapshot() {
+  try {
+    const candles = await binance.fetchOHLCV(
+      CONFIG.SYMBOL,
+      CONFIG.INTERVAL,
+      undefined,
+      CONFIG.CANDLE_LIMIT
+    );
+
+    const mapped = candles.map((c) => ({
+      timestamp: c[0],
+      open: c[1],
+      high: c[2],
+      low: c[3],
+      close: c[4],
+      volume: c[5],
+    }));
+
+    const closes = mapped.map((c) => c.close).filter((n) => typeof n === "number");
+    if (closes.length === 0) throw new Error("No close prices available");
+
+    const averageClose = closes.reduce((acc, n) => acc + n, 0) / closes.length;
+    const lastClose = closes[closes.length - 1];
+
+    return { averageClose, lastClose };
+  } catch (error) {
+    logError("Failed to fetch market snapshot", { message: error.message });
+    throw error;
+  }
+}
+
+// Execute a market order with basic error handling
+async function executeTrade(side, usdAmount, lastPrice) {
+  const quantity = lastPrice > 0 ? usdAmount / lastPrice : 0;
+  if (quantity <= 0) {
+    logError("Invalid quantity computed", { side, usdAmount, lastPrice });
+    return null;
+  }
+
+  try {
+    const order = await binance.createMarketOrder(CONFIG.SYMBOL, side, quantity);
+    logInfo(`Order executed: ${side} ${quantity} BTC at ~${lastPrice}`);
+    return order;
+  } catch (error) {
+    // Stability: surface meaningful error for teaching
+    logError("Trade failed", { side, quantity, message: error.message });
+    return null;
+  }
 }
 
 async function tick() {
-  const price = await binance.fetchOHLCV("BTC/USDT", "1m", undefined, 5);
+  const { averageClose, lastClose } = await getMarketSnapshot();
+  logInfo(`Avg=${averageClose} | Last=${lastClose}`);
 
-  const bPrices = price.map((element) => {
-    return {
-      timestamp: moment(element[0]).format(),
-      open: element[1],
-      high: element[2],
-      low: element[3],
-      close: element[4],
-      volume: element[5],
-    };
+  // Simple strategy for training: if price above average → sell, else buy
+  const side = lastClose > averageClose ? "sell" : "buy";
+  await executeTrade(side, CONFIG.TRADE_SIZE_USD, lastClose);
+  await printBalance(lastClose);
+}
+
+let isRunning = true;
+async function main() {
+  // Stability: graceful shutdown for training demo
+  process.on("SIGINT", () => {
+    isRunning = false;
+    logInfo("Shutting down...");
   });
 
-  const aPrice = bPrices.reduce((acc, price) => acc + price.close, 0) / 5;
-  const lPrice = bPrices[bPrices.length - 1].close;
-
-  const direction = lPrice > aPrice ? "sell" : "buy";
-
-  const TRADE_SIZE = 100;
-  const quantity = TRADE_SIZE / lPrice;
-
-  console.log(`Average price: ${aPrice}. Last price: ${lPrice}`);
-  const order = await binance.createMarketOrder(
-    "BTC/USDT",
-    direction,
-    quantity
-  );
-  console.log(
-    `${moment().format()}: ${direction} ${quantity} BTC at ${lPrice}`
-  );
-  //   console.log(order);
-  printBalance(lPrice);
-}
-async function main() {
-  while (true) {
-    await tick();
-    await delay(60 * 1000);
+  while (isRunning) {
+    try {
+      await tick();
+    } catch (error) {
+      // Keep loop alive to demonstrate resilience
+      logError("Tick failed", { message: error.message });
+    }
+    await delay(CONFIG.LOOP_DELAY_MS);
   }
 }
 
 main();
-// printBalance();
